@@ -1,0 +1,6 @@
+list.html--用于编写测试的功能
+search.html--数据查询,利用复选框，判断是否进行统计分析
+dongtai.html--尾气含量动态监控
+realquery.html--实时查看
+
+统一用layout.html,系统登录的暂时不用搞

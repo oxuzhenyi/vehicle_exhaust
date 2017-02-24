@@ -1,0 +1,397 @@
+{% extends 'layout2.html' %} {% block style %}
+<!--
+查询数据分页显示
+-->
+<style>
+#search {
+    padding: 50px 80px;
+}
+
+#search #searchForm {
+    position: relative;
+}
+
+#search #searchForm #message {
+    position: absolute;
+    top: 6px;
+    left: 270px;
+    color: #F95555;
+    display: none;
+}
+
+#search #searchForm .input-group {
+    width: 250px;
+}
+
+#search #searchForm #submit,#search #searchForm #prepage,#search #searchForm #nextpage {
+    cursor: pointer;
+    transition: color .3s;
+    -o-transition: color .3s;
+    -ms-transition: color .3s;
+    -moz-transition: color .3s;
+    -webkit-transition: color .3s;
+    transition: background-color .3s;
+    -o-transition: background-color .3s;
+    -ms-transition: background-color .3s;
+    -moz-transition: background-color .3s;
+    -webkit-transition: background-color .3s;
+}
+
+#search #searchForm #submit:hover {
+    background-color: #bbb;
+    color: white;
+}
+#search #searchForm #prepage:hover {
+    background-color: #bbb;
+    color: white;
+}
+#search #searchForm #nextpage:hover {
+    background-color: #bbb;
+    color: white;
+}
+#search #hot,
+#search #searchResult {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+#search .movie {
+    margin-bottom: 30px;
+    position: relative;
+}
+
+#search .movie .movie_cover {
+    width: 150px;
+    height: 200px;
+    border-radius: 5px;
+    background-size: cover;
+    background-position: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: box-shadow .3s;
+    -o-transition: box-shadow .3s;
+    -ms-transition: box-shadow .3s;
+    -moz-transition: box-shadow .3s;
+    -webkit-transition: box-shadow .3s;
+}
+
+#search .movie .movie_cover:hover {
+    box-shadow: 5px 5px 10px rgba(20, 20, 20, 0.4);
+}
+
+#search .movie .movie_info {
+    margin-left: 170px;
+}
+
+#search .movie .movie_info a {
+    text-decoration: none;
+    color: #6FA4CA;
+    transition: color .3s;
+    -o-transition: color .3s;
+    -ms-transition: color .3s;
+    -moz-transition: color .3s;
+    -webkit-transition: color .3s;
+}
+
+#search .movie .movie_info a:hover {
+    color: #24597F;
+}
+
+#search .movie .movie_info p {
+    color: #555;
+    margin-bottom: 0;
+    font-size: 12px;
+}
+</style>
+{% endblock %} {% block body %}
+<script>
+$(document).ready(function() {
+    $('#header #nav #nav3').addClass('active');
+
+    $('#header #nav a').mouseenter(function() {
+        $('#header #nav a').removeClass('active');
+        $(this).addClass('active');
+    });
+    $('#header #nav').mouseleave(function() {
+        $('#header #nav a').removeClass('active');
+        $('#header #nav #nav3').addClass('active');
+    });
+})
+</script>
+<div id="search">
+    
+	<div id="selectoptions">
+        &nbsp 检测点城市选择：
+        <select id="sele" name="sele" onChange="watchModule.map_init(this.value)">  
+          <option value="1" >北京</option>  
+          <option value="2" selected>合肥</option>  
+          <option value="3">广州</option>  
+          <option value="4">西安</option>  
+          </select> 
+          
+          &nbsp 燃料类型：
+	    <select id="sele2" name="fuel[]">  
+        <option value="1">汽油</option>  
+        <option value="2">柴油</option>  
+        <option value="3">天然气</option>  
+        <option value="0">全部</option>  
+        </select> 
+		&nbsp 检测结果：
+	    <select id="sele3" name="recoord[]">  
+        <option value="1">合格</option>  
+        <option value="2">无效</option>  
+        <option value="3">超标</option>  
+        <option value="0">全部</option>  
+        </select>
+      </div>
+	  <div id="r-result"> 
+<link href="{{url_for('static',filename='css/datePicker.css')}}" rel="stylesheet" type="text/css" media="all" />
+<script type="text/javascript">
+$(function(){
+	$('#datePicker').date_input();
+	$('#datePicker2').date_input();
+	})
+</script>
+<script type="text/javascript" src="{{url_for('static',filename='js/jquery.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static',filename='js/jquery.date_input.pack.js')}}"></script> 
+<center style="margin-top:100px;">
+<h3 style="margin:30px;">点击下面的输入框，选择查询日期范围
+		<br />
+		   <input type="checkbox" id="timequery" value="Car"/>
+         时间范围
+</h3>
+&nbsp 起始时间：
+<input type="text" id="datePicker" class="date_picker" placeholder="点击选择日期"/>
+&nbsp结束时间：
+<input type="text" id="datePicker2" class="date_picker" placeholder="点击选择日期"/>
+</center>
+    </div> 
+	<div class="form-group" id="searchForm">
+        <div class="input-group">
+            <input type="text" name="keyword" class="form-control" placeholder="输入关键词">
+            <div class="input-group-addon" id="submit">查询<i class="fa fa-fw fa-paper-plane-o"></i></div>
+			<div class="input-group-addon" id="prepage">上一页<i class="fa fa-fw fa-paper-plane-o"></i></div>
+			<div class="input-group-addon" id="nextpage">下一页<i class="fa fa-fw fa-paper-plane-o"></i></div>
+        </div>
+        <p id="message">关键词都不给个怎么搜索……</p>
+		<p>			共计{{Recordnum['count(*)']}}条记录</p>
+    </div>
+	<div class="table-responsive">
+				<table class="table table-hover"">
+    <thead>
+      <tr><th>ID</th><th>Licence</th><th>BgColor</th><th>FuelType</th><th>Speed</th><th>Acc</th><th>RC_CO</th><th>RC_HC</th><th>PassTime</th><th>RecordStatus</th></tr>
+    </thead>
+    <tbody>
+	{% for item in movies %}
+      <tr>
+	  <td>{{item.ID}}</td>
+      <td>{{item.Licence}}</td>
+	  <td>{{item.BgColor}}</td>
+	  <td>{{item.FuelType}}</td>
+	  <td>{{item.Speed}}</td>
+	  <td>{{item.Acc}}</td>
+	  <td>{{item.RC_CO}}</td>
+      <td>{{item.RC_HC}}</td>
+	  <td>{{item.PassTime}}</td>
+	  <td>{{item.RecordStatus}}</td>
+      </tr>
+	  {% endfor %}
+    </tbody>
+    </table>
+	</div>
+   
+    <div id="searchResult" style="display:none;">
+    </div>
+</div>
+
+<script>
+var pagecount=0;
+var queryfuel= $('#search #sele2').val();
+var queryrecord= $('#search #sele3').val();
+var timequery= $('#search #timequery').attr("checked");
+var querydate1=$('#datePicker').val();
+var querydate2=$('#datePicker2').val();
+                window.onload=function(){//实现下拉菜单刷新选择不变
+$('#search #sele2').val({{Fuel}});
+$('#search #sele3').val({{Record}});
+
+$('#datePicker').val({{y1}}+"-"+{{m1}}+"-"+{{d1}});
+$('#datePicker2').val({{y2}}+"-"+{{m2}}+"-"+{{d2}});
+//$('#search #timequery').attr("checked",true);
+if({{Timeq}}==0){
+				$('#search #timequery').attr("checked",false);
+				}
+				else{
+				$('#search #timequery').attr("checked",true);
+					var date1=$('#datePicker').val();
+					var date2=$('#datePicker2').val();
+						alert(date1);
+				}
+
+//queryfuel={{Fuel}};
+} 
+$(document).ready(function() {
+
+     $('#search #submit').click(function() {//若点击查询按钮，则判定为查询条件发生改变pagecount置0
+	var fuel = $('#search #sele2').val();
+	var record = $('#search #sele3').val();
+	var timeq= $('#search #timequery').attr("checked")&1;//1选中
+	var date1=$('#datePicker').val();
+	var date2=$('#datePicker2').val();
+//alert(timeq);
+queryfuel=fuel;
+queryrecord=record;
+timequery=timeq;
+querydate1=date1;
+querydate2=date2;
+pagecount=0;
+//alert(date1);
+        $.ajax({
+                url: '{{url_for("query1")}}',
+                type: 'POST',
+                data: {
+                    index: pagecount,
+                    fuel:fuel,
+					record:record,
+					timeq:timeq,
+					date1:date1,
+					date2:date2
+                },
+                dataType: 'json',
+                error: function() {},
+                success: function(data) {
+                fuel = {{Fuel}};
+				record = {{Record}};
+				date1={{y1}}+"-"+{{m1}}+"-"+{{d1}};
+				date2={{y2}}+"-"+{{m2}}+"-"+{{d2}};
+				if({{Timeq}}==0){
+				timeq=false;
+				}
+				else{
+				timeq=true;
+				}
+                //alert(fuel);
+                window.location.href = '{{url_for("search")}}';
+                queryfuel =fuel;
+				queryrecord=record;
+				timequery=timeq;
+				querydate1=date1;
+				querydate2=date2;
+                alert(fuel);
+
+                
+                    $('#search #searchResult').empty();
+                   $('#search #searchResult').show();
+                }
+            });
+    });
+
+	
+	$('#search #prepage').click(function() {
+	pagecount=pagecount-1;
+//alert(pagecount);
+	var fuel = $('#search #sele2').val();
+	var record = $('#search #sele3').val();
+	var timeq= $('#search #timequery').attr("checked")&1;
+		var date1=$('#datePicker').val();
+	var date2=$('#datePicker2').val();
+//alert(fuel);
+queryfuel=fuel;
+queryrecord=record;
+timequery=timeq;
+querydate1=date1;
+querydate2=date2;
+//alert(querydate1);
+       $.ajax({
+                url: '{{url_for("query1")}}',
+                type: 'POST',
+                data: {
+                    index: pagecount,
+                    fuel:queryfuel,
+					record:queryrecord,
+					timeq:timequery,
+					date1:querydate1,
+					date2:querydate2
+                },
+                dataType: 'json',
+                error: function() {},
+                success: function(data) {
+				fuel = {{Fuel}};
+				record = {{Record}};
+				date1={{y1}}+"-"+{{m1}}+"-"+{{d1}};
+				date2={{y2}}+"-"+{{m2}}+"-"+{{d2}};
+				alert("query:"+date1);
+				if({{Timeq}}==0){
+				timeq=false;
+				}
+				else{
+				timeq=true;
+				}
+                //alert(fuel);
+                window.location.href = '{{url_for("search")}}';
+                queryfuel =fuel;
+				queryrecord=record;
+				timequery=timeq;
+				querydate1=date1;
+				querydate2=date2;
+                    $('#search #searchResult').empty();
+                   $('#search #searchResult').show();
+                }
+            });
+    });
+	$('#search #nextpage').click(function() {
+	pagecount=pagecount+1;
+		var fuel = $('#search #sele2').val();
+		var record = $('#search #sele3').val();
+		var timeq= $('#search #timequery').attr("checked")&1;
+		var date1=$('#datePicker').val();
+	var date2=$('#datePicker2').val();
+//alert(fuel);
+queryfuel=fuel;
+queryrecord=record;
+timequery=timeq;
+querydate1=date1;
+querydate2=date2;
+//alert(querydate1);
+	//alert(pagecount);
+       $.ajax({
+                url: '{{url_for("query1")}}',
+                type: 'POST',
+                data: {
+                    index: pagecount,
+                    fuel:queryfuel,
+					record:queryrecord,
+					timeq:timequery,
+					date1:querydate1,
+					date2:querydate2
+                },
+                dataType: 'json',
+                error: function() {},
+                success: function(data) {
+				fuel = {{Fuel}};
+				record = {{Record}};
+				date1={{y1}}+"-"+{{m1}}+"-"+{{d1}};
+				date2={{y2}}+"-"+{{m2}}+"-"+{{d2}};
+				if({{Timeq}}==0){
+				timeq=false;
+				}
+				else{
+				timeq=true;
+				}
+                //alert(fuel);
+                window.location.href = '{{url_for("search")}}';
+                queryfuel =fuel;
+				queryrecord=record;
+				timequery=timeq;
+				querydate1=date1;
+				querydate2=date2;
+                    $('#search #searchResult').empty();
+                    
+                   $('#search #searchResult').show();
+                }
+            });
+    });
+})
+</script>
+{% endblock %}

@@ -1,0 +1,1336 @@
+{% extends 'layout.html' %} {% block style %}
+<style>
+#rate {
+    padding: 30px 50px;
+    text-align: center;
+}
+
+#rate #basic {
+    width: 90%;
+    margin-left: 5%;
+    margin-right: 5%;
+    height: 300px;
+}
+
+#rate #dynamic {
+    padding: 20px;
+    text-align: center;
+}
+
+#rate #dynamic #control {
+    width: 90%;
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+#rate #dynamic #plots {
+    width: 100%;
+}
+
+#rate #categories {
+    margin-bottom: 10px;
+}
+
+#rate #districts span,
+#rate #categories span {
+    display: inline-block;
+    font-size: 12px;
+    color: #fff;
+    background-color: #ccc;
+    padding: 3px 6px;
+    margin-bottom: 3px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color .3s;
+    -o-transition: color .3s;
+    -ms-transition: color .3s;
+    -moz-transition: color .3s;
+    -webkit-transition: color .3s;
+    transition: background-color .3s;
+    -o-transition: background-color .3s;
+    -ms-transition: background-color .3s;
+    -moz-transition: background-color .3s;
+    -webkit-transition: background-color .3s;
+}
+
+#rate #districts span.active,
+#rate #categories span.active {
+    color: #fff;
+    background-color: #333;
+}
+
+
+
+
+
+#index {
+    padding: 30px 50px;
+}
+
+#index .line {
+    text-align: center;
+}
+
+#index #container1 {
+    display: inline-block;
+    height: 300px;
+    width: 44%;
+    margin-left: 2%;
+    margin-right: 2%;
+}
+#index #container2 {
+    display: inline-block;
+    height: 300px;
+    width: 44%;
+    margin-left: 2%;
+    margin-right: 2%;
+}
+
+#index #container3 {
+    display: inline-block;
+    height: 300px;
+    width: 44%;
+    margin-left: 2%;
+    margin-right: 2%;
+}
+#index #container4 {
+    display: inline-block;
+    height: 300px;
+    width: 44%;
+    margin-left: 2%;
+    margin-right: 2%;
+}
+
+
+    table.map_data_table {
+	/*
+      width:100%;
+      border-collapse: collapse;*/
+	display: inline-block;
+    height: 130px;
+    width: 44%;
+    margin-left: 30%;
+    margin-right: 2%;
+    }
+    table.map_data_table td {
+      padding:5px 0;
+      text-align: center;
+      border:1px solid #ccc;
+    }
+    table.map_data_table thead tr {
+      font-weight:bold;
+    }
+    table.map_data_table td a {
+      text-decoration: none;
+      color: #999;
+    }
+    
+    table.map_data_table td a:hover {
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color .3s ease;
+    }
+	    tr.normal {
+      background: #fff;
+      transition: color .3s ease;
+    }
+    
+    tr.normal>a {
+      background: #999;
+    }
+    
+    tr.active {
+      background: #57A7EE;
+      transition: color .3s ease;
+    }
+    
+    tr.active td>a {
+      color: #fff;
+    }
+</style>
+{% endblock %} {% block body %}
+<script>
+$(document).ready(function() {
+    $('#header #nav #nav2').addClass('active');
+
+    $('#header #nav a').mouseenter(function() {
+        $('#header #nav a').removeClass('active');
+        $(this).addClass('active');
+    });
+    $('#header #nav').mouseleave(function() {
+        $('#header #nav a').removeClass('active');
+        $('#header #nav #nav2').addClass('active');
+    });
+});
+</script>
+<!--
+<div id="car_img">
+<img src="{{url_for('static',filename='images/image1.jpg')}}" width="200"  border="0" />
+  </div>
+  -->
+  <!-- 表格显示相关数据 -->
+  <table class="map_data_table">
+    <thead>
+      <tr>
+	  <td>抓拍图像</td>
+		<td>记录ID</td>
+        <td>车牌号</td>
+        <td>CO含量</td>
+        <td>NO含量</td>
+        <td>HC含量</td>
+		<td>是否超标</td>
+        <td>检测时间</td>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      
+    </tbody>
+  </table>
+
+<div id="index">
+    <div class="line">
+        <div id="container1"></div>
+        <div id="container2"></div>
+    </div>
+	<!--上映区域统计
+    <div class="line">
+        <div id="district"></div>
+    </div>
+	
+	
+    <div class="line">
+        <div id="year"></div>
+        <div id="length"></div>
+    </div>
+	-->
+	<div class="line">
+        <div id="container3"></div>
+        <div id="container4"></div>
+    </div>
+</div>
+
+
+
+
+<script type="text/javascript" src="http://cdn.hcharts.cn/jquery/jquery-1.8.3.min.js"></script>
+  <script type="text/javascript" src="http://cdn.hcharts.cn/highcharts/highcharts.js"></script>
+  <script type="text/javascript" src="http://cdn.hcharts.cn/highcharts/exporting.js"></script>
+ 
+<script src="http://echarts.baidu.com/build/dist/echarts-all.js"></script>
+
+<script type="text/javascript">
+records = [
+            { Id: "1", plate: "皖ALJ003", co: "1.34", no: "356.00", hc: "655.00", isover: "超标" },
+            { Id: "2", plate: "京NHIN10", co: "1.60", no: "478.50", hc: "356.70", isover: "合格" },
+            {Id: "3", plate: "皖A77841", co: "0.30", no: "256.50", hc: "114.60", isover: "合格" },
+            { Id: "4", plate: "皖A85336", co: "0.50", no: "955.20", hc: "154.40", isover: "合格" },
+        { Id: "5", plate: "皖AM6202", co: "2.33", no: "1363.00", hc: "187.00", isover: "超标" },
+        { Id: "6", plate: "皖A30087", co: "0.10", no: "450.00", hc: "365.00", isover: "合格"}
+          ];
+imgurl = [
+            "{{url_for('static',filename='images/image1.jpg')}}",
+            "{{url_for('static',filename='images/image2.jpg')}}",
+            "{{url_for('static',filename='images/image3.jpg')}}",
+            "{{url_for('static',filename='images/image4.jpg')}}",
+        "{{url_for('static',filename='images/image5.jpg')}}",
+        "{{url_for('static',filename='images/image6.jpg')}}"
+          ];
+function setTableContent (a,time) {
+		var imghtml='';
+	  imghtml+='<img src="'+imgurl[a]+'" width="200"  border="0" />'
+      var html = '';
+	  html += ' <tr> '
+		+ ' <td>'+ imghtml +'</td> '
+        + ' <td>'+ ( records[a]["Id"] ) +'</td> '
+        + ' <td><a href="javascript:;">'+records[a]["plate"] +'</a></td> '
+        + ' <td>'+ records[a]["co"]+'</td> '
+        + ' <td>'+ records[a]["no"] +'</td> '
+        + ' <td>'+records[a]["hc"]+'</td> ';
+		if(records[a]["isover"]=="超标"){
+        html += ' <td style="background:red">'+records[a]["isover"]+'</td> '
+		+ ' <td>'+time+'</td> '
+        + ' </tr>'
+      }
+	  else{
+	  html +=  ' <td>'+records[a]["isover"]+'</td> '
+		+ ' <td>'+time+'</td> '
+        + ' </tr>'
+	  }
+      
+	 // alert(imghtml);
+	  //$( '#car_img' ).html( imghtml );
+      $( '#tbody' ).html( html );
+      
+      
+    }
+// echarts2.0动态图测试
+// Step:3 echarts & zrender as a Global Interface by the echarts-plain.js.
+
+// Step:3 echarts和zrender被echarts-plain.js写入为全局接口
+var timeTicket;
+
+var lastData = 11;
+var axisData;
+var IDcount=0;
+clearInterval(timeTicket);
+timeTicket = setInterval(function (){
+    lastData += Math.random() * ((Math.round(Math.random() * 10) % 2) == 0 ? 1 : -1);
+    lastData = lastData.toFixed(1) - 0;
+	
+    axisData = (new Date()).toLocaleTimeString().replace(/^\D*/,'');
+    setTableContent(IDcount,axisData);
+	IDcount++;
+	if(IDcount>5)
+	{
+		IDcount=0;
+	}
+
+}, 2100);
+
+
+
+myChart.setOption(option);
+
+
+</script>
+  
+<script>
+$(document).ready(function() {
+    var movies = eval('({{movies|safe}})')['movies'];
+    var rates = eval('({{rates|safe}})')['rates'];
+    var showtimeData = [];
+    var lengthData = [];
+    for (var i = 0; i < movies.length; i++) {
+        showtimeData.push([movies[i]["showtime"], movies[i]["rate"]]);
+        lengthData.push([movies[i]["length"], movies[i]["rate"]]);
+    }
+	
+	
+	
+    // 电影评分统计
+    require(
+        [
+            'echarts',
+            'echarts/chart/line'
+        ],
+        function(ec) {
+            var basic = ec.init(document.getElementById('basic'));
+            option = {
+                title: {
+                    text: '电影评分统计',
+                    x: 'center',
+                    padding: [15, 10, 10, 10]
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function(params) {
+                        return params.seriesName + '<br>' + params.value[0] + '分：' + params.value[1] + '部';
+                    }
+                },
+                calculable: true,
+                xAxis: [{
+                    type: 'value',
+                    min: 2,
+                    max: 10,
+                }],
+                yAxis: [{
+                    type: 'value',
+                }],
+                series: [{
+                    name: '电影评分统计',
+                    type: 'line',
+                    data: [
+                        [2.5, 1],
+                        [3.6, 1],
+                        [3.8, 2],
+                        [3.9, 2],
+                        [4.0, 7],
+                        [4.1, 8],
+                        [4.2, 8],
+                        [4.3, 7],
+                        [4.4, 11],
+                        [4.5, 11],
+                        [4.6, 17],
+                        [4.7, 13],
+                        [4.8, 11],
+                        [4.9, 15],
+                        [5.0, 21],
+                        [5.1, 32],
+                        [5.2, 38],
+                        [5.3, 29],
+                        [5.4, 47],
+                        [5.5, 55],
+                        [5.6, 52],
+                        [5.7, 87],
+                        [5.8, 71],
+                        [5.9, 73],
+                        [6.0, 82],
+                        [6.1, 81],
+                        [6.2, 91],
+                        [6.3, 97],
+                        [6.4, 131],
+                        [6.5, 119],
+                        [6.6, 149],
+                        [6.7, 144],
+                        [6.8, 142],
+                        [6.9, 116],
+                        [7.0, 133],
+                        [7.1, 147],
+                        [7.2, 160],
+                        [7.3, 151],
+                        [7.4, 163],
+                        [7.5, 156],
+                        [7.6, 154],
+                        [7.7, 146],
+                        [7.8, 122],
+                        [7.9, 120],
+                        [8.0, 170],
+                        [8.1, 183],
+                        [8.2, 177],
+                        [8.3, 155],
+                        [8.4, 140],
+                        [8.5, 131],
+                        [8.6, 106],
+                        [8.7, 104],
+                        [8.8, 69],
+                        [8.9, 45],
+                        [9.0, 29],
+                        [9.1, 31],
+                        [9.2, 12],
+                        [9.3, 4],
+                        [9.4, 5],
+                        [9.5, 2],
+                        [9.6, 1]
+                    ]
+                }]
+            };
+            basic.setOption(option);
+        });
+
+    // 电影评分和上映年份的关系
+    var showtimeOption = {
+        title: {
+            text: '上映时间－评分关系',
+            x: "center"
+        },
+        tooltip: {
+            trigger: 'axis',
+            showDelay: 0,
+            formatter: function(params) {
+                return params.seriesName + '<br/>' + params.value[0] + '年 ' + params.value[1] + '分';
+            },
+            axisPointer: {
+                show: true,
+                type: 'cross',
+                lineStyle: {
+                    type: 'dashed',
+                    width: 1
+                }
+            }
+        },
+        xAxis: [{
+            type: 'value',
+            min: 1920,
+            max: 2015
+        }],
+        yAxis: [{
+            type: 'value',
+            min: 0,
+            max: 10
+        }],
+        series: [{
+            name: '上映时间－评分',
+            type: 'scatter',
+            data: showtimeData,
+        }]
+    };
+    require(
+        [
+            'echarts',
+            'echarts/chart/scatter'
+        ],
+        function(ec) {
+            var showtime = ec.init(document.getElementById('showtime'));
+
+            showtime.setOption(showtimeOption);
+        });
+
+    // 电影评分和片长的关系
+    var lengthOption = {
+        title: {
+            text: '片长－评分关系',
+            x: "center"
+        },
+        tooltip: {
+            trigger: 'axis',
+            showDelay: 0,
+            formatter: function(params) {
+                return params.seriesName + '<br/>' + params.value[0] + '分钟 ' + params.value[1] + '分';
+            },
+            axisPointer: {
+                show: true,
+                type: 'cross',
+                lineStyle: {
+                    type: 'dashed',
+                    width: 1
+                }
+            }
+        },
+        xAxis: [{
+            type: 'value',
+            min: 20,
+            max: 300
+        }],
+        yAxis: [{
+            type: 'value',
+            min: 0,
+            max: 10
+        }],
+        series: [{
+            name: '片长－评分',
+            type: 'scatter',
+            data: lengthData,
+        }]
+    };
+    require(
+        [
+            'echarts',
+            'echarts/chart/scatter'
+        ],
+        function(ec) {
+            var length = ec.init(document.getElementById('length'));
+            length.setOption(lengthOption);
+        });
+
+    $('#rate #categories span').click(function() {
+        $('#rate #categories span').removeClass('active');
+        $(this).addClass('active');
+        $('#rate #districts span').removeClass('active');
+        $('#rate #districts span[name="all"]').addClass('active');
+        // 筛选符合要求的评分数据
+        var category = $(this).text();
+        if (category == '全部') {
+            showtimeOption.series[0].data = showtimeData;
+            lengthOption.series[0].data = lengthData;
+            require(
+                [
+                    'echarts',
+                    'echarts/chart/scatter'
+                ],
+                function(ec) {
+                    var showtime = ec.init(document.getElementById('showtime'));
+                    showtime.setOption(showtimeOption);
+                });
+            require(
+                [
+                    'echarts',
+                    'echarts/chart/scatter'
+                ],
+                function(ec) {
+                    var length = ec.init(document.getElementById('length'));
+                    length.setOption(lengthOption);
+                });
+        } else {
+            var temp1 = [];
+            var temp2 = [];
+            for (var i = 0; i < movies.length; i++) {
+                if (movies[i]['category'].indexOf(category) >= 0) {
+                    temp1.push([movies[i]["showtime"], movies[i]["rate"]]);
+                    temp2.push([movies[i]["length"], movies[i]["rate"]]);
+                }
+            }
+            showtimeOption.series[0].data = temp1;
+            lengthOption.series[0].data = temp2;
+            require(
+                [
+                    'echarts',
+                    'echarts/chart/scatter'
+                ],
+                function(ec) {
+                    var showtime = ec.init(document.getElementById('showtime'));
+                    showtime.setOption(showtimeOption);
+                });
+            require(
+                [
+                    'echarts',
+                    'echarts/chart/scatter'
+                ],
+                function(ec) {
+                    var length = ec.init(document.getElementById('length'));
+                    length.setOption(lengthOption);
+                });
+        }
+    });
+
+    $('#rate #districts span').click(function() {
+        $('#rate #districts span').removeClass('active');
+        $(this).addClass('active');
+        $('#rate #categories span').removeClass('active');
+        $('#rate #categories span[name="all"]').addClass('active');
+        // 筛选符合要求的评分数据
+        var district = $(this).text();
+        if (district == '全部') {
+            showtimeOption.series[0].data = showtimeData;
+            lengthOption.series[0].data = lengthData;
+            require(
+                [
+                    'echarts',
+                    'echarts/chart/scatter'
+                ],
+                function(ec) {
+                    var showtime = ec.init(document.getElementById('showtime'));
+                    showtime.setOption(showtimeOption);
+                });
+            require(
+                [
+                    'echarts',
+                    'echarts/chart/scatter'
+                ],
+                function(ec) {
+                    var length = ec.init(document.getElementById('length'));
+                    length.setOption(lengthOption);
+                });
+        } else {
+            var temp1 = [];
+            var temp2 = [];
+            for (var i = 0; i < movies.length; i++) {
+                if (movies[i]['district'].indexOf(district) >= 0) {
+                    temp1.push([movies[i]["showtime"], movies[i]["rate"]]);
+                    temp2.push([movies[i]["length"], movies[i]["rate"]]);
+                }
+            }
+            showtimeOption.series[0].data = temp1;
+            lengthOption.series[0].data = temp2;
+            require(
+                [
+                    'echarts',
+                    'echarts/chart/scatter'
+                ],
+                function(ec) {
+                    var showtime = ec.init(document.getElementById('showtime'));
+                    showtime.setOption(showtimeOption);
+                });
+            require(
+                [
+                    'echarts',
+                    'echarts/chart/scatter'
+                ],
+                function(ec) {
+                    var length = ec.init(document.getElementById('length'));
+                    length.setOption(lengthOption);
+                });
+        }
+    });
+
+    // 各国家各类别平均评分
+    var averageOption = {
+        title: {
+            text: '各国家各类别平均评分',
+            x: 'left',
+            padding: [10, 10, 10, 56]
+        },
+        tooltip: {
+            trigger: 'item'
+        },
+        calculable: true,
+        xAxis: [{
+            type: 'category',
+            data: rates['United States of America']['categories']
+        }],
+        yAxis: [{
+            type: 'value',
+            min: 0,
+            max: 10
+        }],
+        series: [{
+            name: '各国家各类别平均评分',
+            type: 'bar',
+            data: rates['United States of America']['rates'],
+            markPoint: {
+                data: [{
+                    type: 'max',
+                    name: '最大值'
+                }, {
+                    type: 'min',
+                    name: '最小值'
+                }]
+            },
+            markLine: {
+                data: [{
+                    type: 'average',
+                    name: '平均值'
+                }]
+            }
+        }]
+    };
+    require(
+        [
+            'echarts',
+            'echarts/chart/bar'
+        ],
+        function(ec) {
+            var average = ec.init(document.getElementById('average'));
+            average.setOption(averageOption);
+        });
+
+    $('#rate select').change(function() {
+        var district = $(this).find('option:selected').text();
+        averageOption.xAxis[0].data = rates[district]['categories'];
+        averageOption.series[0].data = rates[district]['rates'];
+        require(
+            [
+                'echarts',
+                'echarts/chart/bar'
+            ],
+            function(ec) {
+                var average = ec.init(document.getElementById('average'));
+                average.setOption(averageOption);
+            });
+    });
+
+});
+</script>
+<script>
+$(function () {                                                                     
+    $(document).ready(function() {                                                  
+        Highcharts.setOptions({                                                     
+            global: {                                                               
+                useUTC: false                                                       
+            }                                                                       
+        });                                                                         
+                                                                                    
+        var chart;                                                                  
+        $('#container1').highcharts({                                                
+            chart: {                                                                
+                type: 'spline',                                                     
+                animation: Highcharts.svg, // don't animate in old IE               
+                marginRight: 10,                                                    
+                events: {                                                           
+                    load: function() {                                              
+                                                                                    
+                        // set up the updating of the chart each second             
+                        var series = this.series[0];                                
+                        setInterval(function() {                                    
+                            var x = (new Date()).getTime(), // current time         
+                                y = Math.random()*50;                                  
+                            series.addPoint([x, y], true, true);                    
+                        }, 2000); 
+						var series1 = this.series[1];                                
+                        setInterval(function() {                                    
+                            var x1 = (new Date()).getTime(), // current time         
+                                y1 = Math.random()*50;                                  
+                            series1.addPoint([x1, y1], true, true);                    
+                        }, 2000); 
+						series1.hide();
+						var series2 = this.series[2];                                
+                        setInterval(function() {                                    
+                            var x2 = (new Date()).getTime(), // current time         
+                                y2 = Math.random()*50;                                  
+                            series2.addPoint([x2, y2], true, true);                    
+                        }, 2000); 
+						series2.hide();
+						var series3 = this.series[3];                                
+                        setInterval(function() {                                    
+                            var x3 = (new Date()).getTime(), // current time         
+                                y3 = Math.random()*50;                                  
+                            series3.addPoint([x3, y3], true, true);                    
+                        }, 2000);
+						series3.hide();
+                    }                                                               
+                }                                                                   
+            },                                                                      
+            title: {                                                                
+                text: 'HC含量动态监控'                                            
+            },                                                                      
+            xAxis: { 
+				title: {                                                            
+                    text: '时间'                                                   
+                },
+                type: 'datetime',                                                   
+                tickPixelInterval: 150                                              
+            },                                                                      
+            yAxis: {                                                                
+                title: {                                                            
+                    text: '含量(g/cm3)'                                                   
+                },                                                                  
+                plotLines: [{                                                       
+                    value: 0,                                                       
+                    width: 1,                                                       
+                    color: '#808080'                                                
+                }]                                                                  
+            },                                                                      
+            tooltip: {                                                              
+                formatter: function() {                                             
+                        return '<b>'+ this.series.name +'</b><br>'+                
+                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) +'<br>'+
+                        Highcharts.numberFormat(this.y, 2);                         
+                }                                                                   
+            },                                                                      
+            legend: {
+                layout: 'horizontal',
+                align: 'right',
+                verticalAlign: 'bottom',
+                borderWidth: 0
+            },
+			credits: {
+					     text: '',
+            	 href: 'http://home.ustc.edu.cn/~wfwufan/'
+						},
+            exporting: {                                                            
+                enabled: false                                                      
+            },                                                                      
+            series: [{                                                              
+                name: 'HC',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data = [],                                                  
+                        time = (new Date()).getTime(),                              
+                        i;                                                          
+                                                                                    
+                    for (i = -19; i <= 0; i++) {                                    
+                        data.push({                                                 
+                            x: time + i * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'CO2',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data1 = [],                                                  
+                        time1 = (new Date()).getTime(),                              
+                        i1;                                                          
+                                                                                    
+                    for (i1 = -19; i1 <= 0; i1++) {                                    
+                        data1.push({                                                 
+                            x: time1 + i1 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data1;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'CO',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data2 = [],                                                  
+                        time2 = (new Date()).getTime(),                              
+                        i2;                                                          
+                                                                                    
+                    for (i2 = -19; i2 <= 0; i2++) {                                    
+                        data2.push({                                                 
+                            x: time2 + i2 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data2;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'NO',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data3 = [],                                                  
+                        time3 = (new Date()).getTime(),                              
+                        i3;                                                          
+                                                                                    
+                    for (i3 = -19; i3 <= 0; i3++) {                                    
+                        data3.push({                                                 
+                            x: time3 + i3 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data3;                                                    
+                })()                                                                
+            }]                                                                      
+        });                                                                         
+    });                                                                             
+                                                                                    
+}); 
+  </script>
+<script>
+$(function () {                                                                     
+    $(document).ready(function() {                                                  
+        Highcharts.setOptions({                                                     
+            global: {                                                               
+                useUTC: false                                                       
+            }                                                                       
+        });                                                                         
+                                                                                    
+        var chart;                                                                  
+        $('#container2').highcharts({                                                
+            chart: {                                                                
+                type: 'spline',                                                     
+                animation: Highcharts.svg, // don't animate in old IE               
+                marginRight: 10,                                                    
+                events: {                                                           
+                    load: function() {                                              
+                                                                                    
+                        // set up the updating of the chart each second             
+                        var series = this.series[0];                                
+                        setInterval(function() {                                    
+                            var x = (new Date()).getTime(), // current time         
+                                y = Math.random()*50;                                  
+                            series.addPoint([x, y], true, true);                    
+                        }, 2000); 
+						series.hide();
+						var series1 = this.series[1];                                
+                        setInterval(function() {                                    
+                            var x1 = (new Date()).getTime(), // current time         
+                                y1 = Math.random()*50;                                  
+                            series1.addPoint([x1, y1], true, true);                    
+                        }, 2000); 
+						var series2 = this.series[2];                                
+                        setInterval(function() {                                    
+                            var x2 = (new Date()).getTime(), // current time         
+                                y2 = Math.random()*50;                                  
+                            series2.addPoint([x2, y2], true, true);                    
+                        }, 2000); 
+						series2.hide();
+						var series3 = this.series[3];                                
+                        setInterval(function() {                                    
+                            var x3 = (new Date()).getTime(), // current time         
+                                y3 = Math.random()*50;                                  
+                            series3.addPoint([x3, y3], true, true);                    
+                        }, 2000);
+						series3.hide();
+                    }                                                               
+                }                                                                   
+            },                                                                      
+            title: {                                                                
+                text: 'CO2含量动态监控'                                            
+            },                                                                      
+            xAxis: { 
+				title: {                                                            
+                    text: '时间'                                                   
+                },
+                type: 'datetime',                                                   
+                tickPixelInterval: 150                                              
+            },                                                                      
+            yAxis: {                                                                
+                title: {                                                            
+                    text: '含量(g/cm3)'                                                   
+                },                                                                  
+                plotLines: [{                                                       
+                    value: 0,                                                       
+                    width: 1,                                                       
+                    color: '#808080'                                                
+                }]                                                                  
+            },                                                                      
+            tooltip: {                                                              
+                formatter: function() {                                             
+                        return '<b>'+ this.series.name +'</b><br>'+                
+                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) +'<br>'+
+                        Highcharts.numberFormat(this.y, 2);                         
+                }                                                                   
+            },                                                                      
+            legend: {
+                layout: 'horizontal',
+                align: 'right',
+                verticalAlign: 'bottom',
+                borderWidth: 0
+            },
+			credits: {
+					     text: '',
+            	 href: 'http://home.ustc.edu.cn/~wfwufan/'
+						},
+            exporting: {                                                            
+                enabled: false                                                      
+            },                                                                      
+            series: [{                                                              
+                name: 'HC',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data = [],                                                  
+                        time = (new Date()).getTime(),                              
+                        i;                                                          
+                                                                                    
+                    for (i = -19; i <= 0; i++) {                                    
+                        data.push({                                                 
+                            x: time + i * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'CO2',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data1 = [],                                                  
+                        time1 = (new Date()).getTime(),                              
+                        i1;                                                          
+                                                                                    
+                    for (i1 = -19; i1 <= 0; i1++) {                                    
+                        data1.push({                                                 
+                            x: time1 + i1 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data1;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'CO',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data2 = [],                                                  
+                        time2 = (new Date()).getTime(),                              
+                        i2;                                                          
+                                                                                    
+                    for (i2 = -19; i2 <= 0; i2++) {                                    
+                        data2.push({                                                 
+                            x: time2 + i2 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data2;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'NO',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data3 = [],                                                  
+                        time3 = (new Date()).getTime(),                              
+                        i3;                                                          
+                                                                                    
+                    for (i3 = -19; i3 <= 0; i3++) {                                    
+                        data3.push({                                                 
+                            x: time3 + i3 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data3;                                                    
+                })()                                                                
+            }]                                                                      
+        });                                                                         
+    });                                                                             
+                                                                                    
+}); 
+  </script>
+
+<script>
+$(function () {                                                                     
+    $(document).ready(function() {                                                  
+        Highcharts.setOptions({                                                     
+            global: {                                                               
+                useUTC: false                                                       
+            }                                                                       
+        });                                                                         
+                                                                                    
+        var chart;                                                                  
+        $('#container3').highcharts({                                                
+            chart: {                                                                
+                type: 'spline',                                                     
+                animation: Highcharts.svg, // don't animate in old IE               
+                marginRight: 10,                                                    
+                events: {                                                           
+                    load: function() {                                              
+                                                                                    
+                        // set up the updating of the chart each second             
+                        var series = this.series[0];                                
+                        setInterval(function() {                                    
+                            var x = (new Date()).getTime(), // current time         
+                                y = Math.random()*50;                                  
+                            series.addPoint([x, y], true, true);                    
+                        }, 2000); 
+						series.hide();
+						var series1 = this.series[1];                                
+                        setInterval(function() {                                    
+                            var x1 = (new Date()).getTime(), // current time         
+                                y1 = Math.random()*50;                                  
+                            series1.addPoint([x1, y1], true, true);                    
+                        }, 2000); 
+						series1.hide();
+						var series2 = this.series[2];                                
+                        setInterval(function() {                                    
+                            var x2 = (new Date()).getTime(), // current time         
+                                y2 = Math.random()*50;                                  
+                            series2.addPoint([x2, y2], true, true);                    
+                        }, 2000); 
+						var series3 = this.series[3];                                
+                        setInterval(function() {                                    
+                            var x3 = (new Date()).getTime(), // current time         
+                                y3 = Math.random()*50;                                  
+                            series3.addPoint([x3, y3], true, true);                    
+                        }, 2000);
+						series3.hide();
+                    }                                                               
+                }                                                                   
+            },                                                                      
+            title: {                                                                
+                text: 'CO含量动态监控'                                            
+            },                                                                      
+            xAxis: { 
+				title: {                                                            
+                    text: '时间'                                                   
+                },
+                type: 'datetime',                                                   
+                tickPixelInterval: 150                                              
+            },                                                                      
+            yAxis: {                                                                
+                title: {                                                            
+                    text: '含量(g/cm3)'                                                   
+                },                                                                  
+                plotLines: [{                                                       
+                    value: 0,                                                       
+                    width: 1,                                                       
+                    color: '#808080'                                                
+                }]                                                                  
+            },                                                                      
+            tooltip: {                                                              
+                formatter: function() {                                             
+                        return '<b>'+ this.series.name +'</b><br>'+                
+                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) +'<br>'+
+                        Highcharts.numberFormat(this.y, 2);                         
+                }                                                                   
+            },                                                                      
+            legend: {
+                layout: 'horizontal',
+                align: 'right',
+                verticalAlign: 'bottom',
+                borderWidth: 0
+            },
+			credits: {
+					     text: '',
+            	 href: 'http://home.ustc.edu.cn/~wfwufan/'
+						},
+            exporting: {                                                            
+                enabled: false                                                      
+            },                                                                      
+            series: [{                                                              
+                name: 'HC',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data = [],                                                  
+                        time = (new Date()).getTime(),                              
+                        i;                                                          
+                                                                                    
+                    for (i = -19; i <= 0; i++) {                                    
+                        data.push({                                                 
+                            x: time + i * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'CO2',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data1 = [],                                                  
+                        time1 = (new Date()).getTime(),                              
+                        i1;                                                          
+                                                                                    
+                    for (i1 = -19; i1 <= 0; i1++) {                                    
+                        data1.push({                                                 
+                            x: time1 + i1 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data1;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'CO',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data2 = [],                                                  
+                        time2 = (new Date()).getTime(),                              
+                        i2;                                                          
+                                                                                    
+                    for (i2 = -19; i2 <= 0; i2++) {                                    
+                        data2.push({                                                 
+                            x: time2 + i2 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data2;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'NO',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data3 = [],                                                  
+                        time3 = (new Date()).getTime(),                              
+                        i3;                                                          
+                                                                                    
+                    for (i3 = -19; i3 <= 0; i3++) {                                    
+                        data3.push({                                                 
+                            x: time3 + i3 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data3;                                                    
+                })()                                                                
+            }]                                                                      
+        });
+			
+    });                                                                             
+                                                                                    
+}); 
+  </script>
+  <script>
+$(function () {                                                                     
+    $(document).ready(function() {                                                  
+        Highcharts.setOptions({                                                     
+            global: {                                                               
+                useUTC: false                                                       
+            }                                                                       
+        });                                                                         
+                                                                                    
+        var chart;                                                                  
+        $('#container4').highcharts({                                                
+            chart: {                                                                
+                type: 'spline',                                                     
+                animation: Highcharts.svg, // don't animate in old IE               
+                marginRight: 10,                                                    
+                events: {                                                           
+                    load: function() {                                              
+                                                                                    
+                        // set up the updating of the chart each second             
+                        var series = this.series[0];                                
+                        setInterval(function() {                                    
+                            var x = (new Date()).getTime(), // current time         
+                                y = Math.random()*50;                                  
+                            series.addPoint([x, y], true, true);                    
+                        }, 2000); 
+						series.hide();
+						var series1 = this.series[1];                                
+                        setInterval(function() {                                    
+                            var x1 = (new Date()).getTime(), // current time         
+                                y1 = Math.random()*50;                                  
+                            series1.addPoint([x1, y1], true, true);                    
+                        }, 2000); 
+						series1.hide();
+						var series2 = this.series[2];                                
+                        setInterval(function() {                                    
+                            var x2 = (new Date()).getTime(), // current time         
+                                y2 = Math.random()*50;                                  
+                            series2.addPoint([x2, y2], true, true);                    
+                        }, 2000); 
+						series2.hide();
+						var series3 = this.series[3];                                
+                        setInterval(function() {                                    
+                            var x3 = (new Date()).getTime(), // current time         
+                                y3 = Math.random()*50;                                  
+                            series3.addPoint([x3, y3], true, true);                    
+                        }, 2000); 
+                    }                                                               
+                }                                                                   
+            },                                                                      
+            title: {                                                                
+                text: 'NO含量动态监控'                                            
+            },                                                                      
+            xAxis: { 
+				title: {                                                            
+                    text: '时间'                                                   
+                },
+                type: 'datetime',                                                   
+                tickPixelInterval: 150                                              
+            },                                                                      
+            yAxis: {                                                                
+                title: {                                                            
+                    text: '含量(g/cm3)'                                                   
+                },                                                                  
+                plotLines: [{                                                       
+                    value: 0,                                                       
+                    width: 1,                                                       
+                    color: '#808080'                                                
+                }]                                                                  
+            },                                                                      
+            tooltip: {                                                              
+                formatter: function() {                                             
+                        return '<b>'+ this.series.name +'</b><br>'+                
+                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) +'<br>'+
+                        Highcharts.numberFormat(this.y, 2);                         
+                }                                                                   
+            },                                                                      
+            legend: {
+                layout: 'horizontal',
+                align: 'right',
+                verticalAlign: 'bottom',
+                borderWidth: 0
+            },
+			credits: {
+					     text: '',
+            	 href: 'http://home.ustc.edu.cn/~wfwufan/'
+						},
+            exporting: {                                                            
+                enabled: false                                                      
+            },                                                                      
+            series: [{                                                              
+                name: 'HC',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data = [],                                                  
+                        time = (new Date()).getTime(),                              
+                        i;                                                          
+                                                                                    
+                    for (i = -19; i <= 0; i++) {                                    
+                        data.push({                                                 
+                            x: time + i * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'CO2',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data1 = [],                                                  
+                        time1 = (new Date()).getTime(),                              
+                        i1;                                                          
+                                                                                    
+                    for (i1 = -19; i1 <= 0; i1++) {                                    
+                        data1.push({                                                 
+                            x: time1 + i1 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data1;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'CO',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data2 = [],                                                  
+                        time2 = (new Date()).getTime(),                              
+                        i2;                                                          
+                                                                                    
+                    for (i2 = -19; i2 <= 0; i2++) {                                    
+                        data2.push({                                                 
+                            x: time2 + i2 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data2;                                                    
+                })()                                                                
+            },{                                                              
+                name: 'NO',                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data3 = [],                                                  
+                        time3 = (new Date()).getTime(),                              
+                        i3;                                                          
+                                                                                    
+                    for (i3 = -19; i3 <= 0; i3++) {                                    
+                        data3.push({                                                 
+                            x: time3 + i3 * 1000,                                     
+                            y: Math.random()*50                                        
+                        });                                                         
+                    }                                                               
+                    return data3;                                                    
+                })()                                                                
+            }]                                                                      
+        });                                                                         
+    });                                                                             
+                                                                                    
+}); 
+  </script>
+ 
+
+{% endblock %}

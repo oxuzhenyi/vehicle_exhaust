@@ -1,0 +1,570 @@
+{% extends 'layout.html' %} {% block style %}
+<!--
+查询数据分页显示
+-->
+<style>
+#search {
+    padding: 50px 80px;
+}
+
+#search #searchForm {
+    position: relative;
+}
+
+#search #searchForm #message {
+    position: absolute;
+    top: 6px;
+    left: 270px;
+    color: #F95555;
+    display: none;
+}
+
+#search #searchForm .input-group {
+    width: 250px;
+}
+
+#search #searchForm #submit,#search #searchForm #prepage,#search #searchForm #nextpage {
+    cursor: pointer;
+    transition: color .3s;
+    -o-transition: color .3s;
+    -ms-transition: color .3s;
+    -moz-transition: color .3s;
+    -webkit-transition: color .3s;
+    transition: background-color .3s;
+    -o-transition: background-color .3s;
+    -ms-transition: background-color .3s;
+    -moz-transition: background-color .3s;
+    -webkit-transition: background-color .3s;
+}
+
+#search #searchForm #submit:hover {
+    background-color: #bbb;
+    color: white;
+}
+#search #searchForm #prepage:hover {
+    background-color: #bbb;
+    color: white;
+}
+#search #searchForm #nextpage:hover {
+    background-color: #bbb;
+    color: white;
+}
+#search #basic {
+    width: 90%;
+    margin-left: 5%;
+    margin-right: 5%;
+    height: 300px;
+}
+
+#search #hot,
+#search #searchResult {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+#search .movie {
+    margin-bottom: 30px;
+    position: relative;
+}
+
+#search .movie .movie_cover {
+    width: 150px;
+    height: 200px;
+    border-radius: 5px;
+    background-size: cover;
+    background-position: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: box-shadow .3s;
+    -o-transition: box-shadow .3s;
+    -ms-transition: box-shadow .3s;
+    -moz-transition: box-shadow .3s;
+    -webkit-transition: box-shadow .3s;
+}
+
+#search .movie .movie_cover:hover {
+    box-shadow: 5px 5px 10px rgba(20, 20, 20, 0.4);
+}
+
+#search .movie .movie_info {
+    margin-left: 170px;
+}
+
+#search .movie .movie_info a {
+    text-decoration: none;
+    color: #6FA4CA;
+    transition: color .3s;
+    -o-transition: color .3s;
+    -ms-transition: color .3s;
+    -moz-transition: color .3s;
+    -webkit-transition: color .3s;
+}
+
+#search .movie .movie_info a:hover {
+    color: #24597F;
+}
+
+#search .movie .movie_info p {
+    color: #555;
+    margin-bottom: 0;
+    font-size: 12px;
+}
+</style>
+{% endblock %} {% block body %}
+<script>
+$(document).ready(function() {
+    $('#header #nav #nav3').addClass('active');
+
+    $('#header #nav a').mouseenter(function() {
+        $('#header #nav a').removeClass('active');
+        $(this).addClass('active');
+    });
+    $('#header #nav').mouseleave(function() {
+        $('#header #nav a').removeClass('active');
+        $('#header #nav #nav3').addClass('active');//关键部分，导致search无效
+    });
+})
+</script>
+<div id="search">
+    
+	<div id="selectoptions">
+        &nbsp 检测点城市选择：
+        <select id="sele" name="sele" onChange="watchModule.map_init(this.value)">  
+          <option value="1" >北京</option>  
+          <option value="2" selected>合肥</option>  
+          <option value="3">广州</option>  
+          <option value="4">西安</option>  
+          </select> 
+          
+          &nbsp 燃料类型：
+	    <select id="sele2" name="fuel[]">  
+		 <option value="0">全部</option> 
+        <option value="1">汽油</option>  
+        <option value="2">柴油</option>  
+        <option value="3">天然气</option>  
+ 
+        </select> 
+		&nbsp 检测结果：
+	    <select id="sele3" name="recoord[]">  
+        <option value="0">全部</option>  
+        <option value="1">合格</option>  
+        <option value="2">无效</option>  
+        <option value="3">超标</option>  
+
+        </select>
+      </div>
+	  <div id="r-result"> 
+<link href="{{url_for('static',filename='css/datePicker.css')}}" rel="stylesheet" type="text/css" media="all" />
+<script type="text/javascript">
+$(function(){
+	$('#datePicker').date_input();
+	$('#datePicker2').date_input();
+	})
+</script>
+<script type="text/javascript" src="{{url_for('static',filename='js/jquery.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static',filename='js/jquery.date_input.pack.js')}}"></script> 
+<center style="margin-top:100px;">
+<h3 style="margin:30px;">点击下面的输入框，选择查询日期范围
+		<br />
+		   <input type="checkbox" id="timequery"/>
+         时间范围
+		 <input type="checkbox" id="staticquery"/>
+         统计分析
+</h3>
+&nbsp 起始时间：
+<input type="text" id="datePicker" class="date_picker" placeholder="点击选择日期"/>
+&nbsp结束时间：
+<input type="text" id="datePicker2" class="date_picker" placeholder="点击选择日期"/>
+</center>
+    </div> 
+	<div class="form-group" id="searchForm">
+        <div class="input-group">
+            <input type="text" name="keyword" class="form-control" placeholder="输入关键词">
+            <div class="input-group-addon" id="submit">查询<i class="fa fa-fw fa-paper-plane-o"></i></div>
+			<div class="input-group-addon" id="prepage">上一页<i class="fa fa-fw fa-paper-plane-o"></i></div>
+			<div class="input-group-addon" id="nextpage">下一页<i class="fa fa-fw fa-paper-plane-o"></i></div>
+        </div>
+        <p id="message">关键词都不给个怎么搜索……</p>
+		<p>			共计{{Recordnum['count(*)']}}条记录</p>{{Ststicdic['plate_blue']}},{{Ststicdic['plate_blue']['count(*)']}},{{Ststicdic['plate_black']['count(*)']}},{{Ststicdic['plate_white']['count(*)']}},{{Ststicdic['plate_yellow']['count(*)']}}
+    </div>
+	<div class="table-responsive">
+				<table class="table table-hover"">
+    <thead>
+      <tr><th>ID</th><th>Licence</th><th>BgColor</th><th>FuelType</th><th>Speed</th><th>Acc</th><th>RC_CO</th><th>RC_HC</th><th>PassTime</th><th>RecordStatus</th></tr>
+    </thead>
+    <tbody>
+	{% for item in movies %}
+      <tr>
+	  <td>{{item.ID}}</td>
+      <td>{{item.Licence}}</td>
+	  <td>{{item.BgColor}}</td>
+	  <td>{{item.FuelType}}</td>
+	  <td>{{item.Speed}}</td>
+	  <td>{{item.Acc}}</td>
+	  <td>{{item.RC_CO}}</td>
+      <td>{{item.RC_HC}}</td>
+	  <td>{{item.PassTime}}</td>
+	  <td>{{item.RecordStatus}}</td>
+      </tr>
+	  {% endfor %}
+    </tbody>
+    </table>
+	</div>
+	<div id="rate" style="position:relative;">
+            <select style="position:absolute;right:110px;top:0px;z-index:999;height:30px;vertical-align:middle;background-color:#f3f3f3;color:#2D8EA0;border-color:rgba(97,164,177,0.6);">
+			<option value="0">车牌颜色统计</option> 
+	    <option value="1">数据有效性统计</option>  
+        <option value="2">燃料类型统计</option>  
+        <option value="3">车流量统计</option>  
+        
+            </select>
+   <div id="basic"></div>
+   </div>
+    <div id="searchResult" style="display:none;">
+	
+    </div>
+</div>
+
+<script>
+var pagecount=0;
+var queryfuel= $('#search #sele2').val();
+var queryrecord= $('#search #sele3').val();
+var timequery= $('#search #timequery').attr("checked");
+var staticquery= $('#search #staticquery').attr("checked");
+var querydate1=$('#datePicker').val();
+var querydate2=$('#datePicker2').val();
+                window.onload=function(){//实现下拉菜单刷新选择不变
+$('#search #sele2').val({{Fuel}});
+$('#search #sele3').val({{Record}});
+
+$('#datePicker').val({{y1}}+"-"+{{m1}}+"-"+{{d1}});
+$('#datePicker2').val({{y2}}+"-"+{{m2}}+"-"+{{d2}});
+//$('#search #timequery').attr("checked",true);
+if({{Timeq}}==0){
+				$('#search #timequery').attr("checked",false);
+				}
+				else{
+				$('#search #timequery').attr("checked",true);
+					var date1=$('#datePicker').val();
+					var date2=$('#datePicker2').val();
+						//alert(date1);
+				}
+if({{Staticq}}==0){
+				$('#search #staticquery').attr("checked",false);
+				}
+				else{
+				$('#search #staticquery').attr("checked",true);
+				}
+//queryfuel={{Fuel}};
+} 
+$(document).ready(function() {
+
+     $('#search #submit').click(function() {//若点击查询按钮，则判定为查询条件发生改变pagecount置0
+	var fuel = $('#search #sele2').val();
+	var record = $('#search #sele3').val();
+	var timeq= $('#search #timequery').attr("checked")&1;//1选中时间范围
+	var staticq= $('#search #staticquery').attr("checked")&1;//1选中统计分析
+	var date1=$('#datePicker').val();
+	var date2=$('#datePicker2').val();
+alert(fuel);
+queryfuel=fuel;
+queryrecord=record;
+timequery=timeq;
+staticquery=staticq;
+querydate1=date1;
+querydate2=date2;
+pagecount=0;
+//alert(date1);
+        $.ajax({
+                url: '{{url_for("query1")}}',
+                type: 'POST',
+                data: {
+                    index: pagecount,
+                    fuel:fuel,
+					record:record,
+					timeq:timeq,
+					staticq:staticq,
+					date1:date1,
+					date2:date2
+                },
+                dataType: 'json',
+                error: function() {},
+                success: function(data) {
+                fuel = {{Fuel}};
+				record = {{Record}};
+				date1={{y1}}+"-"+{{m1}}+"-"+{{d1}};
+				date2={{y2}}+"-"+{{m2}}+"-"+{{d2}};
+				if({{Timeq}}==0){
+				timeq=false;
+				}
+				else{
+				timeq=true;
+				}
+				if({{Staticq}}==0){
+				staticq=false;
+				}
+				else{
+				staticq=true;
+				}
+                //alert(fuel);
+                window.location.href = '{{url_for("search")}}';
+                queryfuel =fuel;
+				queryrecord=record;
+				timequery=timeq;
+				staticquery=staticq;
+				querydate1=date1;
+				querydate2=date2;
+                alert(fuel);
+
+                
+                    //$('#search #searchResult').empty();
+                   $('#search #searchResult').show();
+                }
+            });
+    });
+
+	
+	$('#search #prepage').click(function() {
+	pagecount=pagecount-1;
+//alert(pagecount);
+	var fuel = $('#search #sele2').val();
+	var record = $('#search #sele3').val();
+	var timeq= $('#search #timequery').attr("checked")&1;
+	var staticq= $('#search #staticquery').attr("checked")&1;//1选中统计分析
+		var date1=$('#datePicker').val();
+	var date2=$('#datePicker2').val();
+//alert(fuel);
+queryfuel=fuel;
+queryrecord=record;
+timequery=timeq;
+staticquery=staticq;
+querydate1=date1;
+querydate2=date2;
+//alert(querydate1);
+       $.ajax({
+                url: '{{url_for("query1")}}',
+                type: 'POST',
+                data: {
+                    index: pagecount,
+                    fuel:queryfuel,
+					record:queryrecord,
+					timeq:timequery,
+					staticq:staticquery,
+					date1:querydate1,
+					date2:querydate2
+                },
+                dataType: 'json',
+                error: function() {},
+                success: function(data) {
+				fuel = {{Fuel}};
+				record = {{Record}};
+				date1={{y1}}+"-"+{{m1}}+"-"+{{d1}};
+				date2={{y2}}+"-"+{{m2}}+"-"+{{d2}};
+				//alert("query:"+date1);
+				if({{Timeq}}==0){
+				timeq=false;
+				}
+				else{
+				timeq=true;
+				}
+				if({{Staticq}}==0){
+				staticq=false;
+				}
+				else{
+				staticq=true;
+				}
+                //alert(fuel);
+                window.location.href = '{{url_for("search")}}';
+                queryfuel =fuel;
+				queryrecord=record;
+				timequery=timeq;
+				staticquery=staticq;
+				querydate1=date1;
+				querydate2=date2;
+                    //$('#search #searchResult').empty();
+                   $('#search #searchResult').show();
+                }
+            });
+    });
+	$('#search #nextpage').click(function() {
+	pagecount=pagecount+1;
+		var fuel = $('#search #sele2').val();
+		var record = $('#search #sele3').val();
+		var timeq= $('#search #timequery').attr("checked")&1;
+		var staticq= $('#search #staticquery').attr("checked")&1;//1选中统计分析
+		var date1=$('#datePicker').val();
+	var date2=$('#datePicker2').val();
+//alert(fuel);
+queryfuel=fuel;
+queryrecord=record;
+timequery=timeq;
+staticquery=staticq;
+querydate1=date1;
+querydate2=date2;
+//alert(querydate1);
+	//alert(pagecount);
+       $.ajax({
+                url: '{{url_for("query1")}}',
+                type: 'POST',
+                data: {
+                    index: pagecount,
+                    fuel:queryfuel,
+					record:queryrecord,
+					timeq:timequery,
+					staticq:staticquery,
+					date1:querydate1,
+					date2:querydate2
+                },
+                dataType: 'json',
+                error: function() {},
+                success: function(data) {
+				fuel = {{Fuel}};
+				record = {{Record}};
+				date1={{y1}}+"-"+{{m1}}+"-"+{{d1}};
+				date2={{y2}}+"-"+{{m2}}+"-"+{{d2}};
+				if({{Timeq}}==0){
+				timeq=false;
+				}
+				else{
+				timeq=true;
+				}
+				if({{Staticq}}==0){
+				staticq=false;
+				}
+				else{
+				staticq=true;
+				}
+                //alert(fuel);
+                window.location.href = '{{url_for("search")}}';
+                queryfuel =fuel;
+				queryrecord=record;
+				timequery=timeq;
+				staticquery=staticq;
+				querydate1=date1;
+				querydate2=date2;
+                    //$('#search #searchResult').empty();
+                    
+                   $('#search #searchResult').show();
+                }
+            });
+    });
+	
+	// 基本检测数据统计
+	var recordnum=0+{{Ststicdic['data_youxiao']}}+{{Ststicdic['data_wuxiao']}};
+    var bgrOption = {
+        title: {
+            text: '车牌颜色统计',
+            x: 'left',
+            padding: [10, 10, 10, 56]
+        },
+        tooltip: {
+            trigger: 'item'
+        },
+        calculable: true,
+        xAxis: [{
+            type: 'category',
+            data: ['蓝','黑','白','黄']
+        }],
+        yAxis: [{
+            type: 'value'
+        
+        }],
+        series: [{
+            name: '各车牌颜色统计',
+            type: 'bar',
+//			itemStyle: {normal: {
+//			label : {show:true,position:'top',formatter:'{c} %'}
+//		}},
+            data:  [
+                         {{Ststicdic['plate_blue']}},
+                         {{Ststicdic['plate_black']}},
+                      {{Ststicdic['plate_white']}},
+                      {{Ststicdic['plate_yellow']}}
+                    ],
+            markPoint: {
+                data: [{
+                    type: 'max',
+                    name: '最大值'
+                }, {
+                    type: 'min',
+                    name: '最小值'
+                }]
+            },
+            markLine: {
+                data: [{
+                    type: 'average',
+                    name: '平均值'
+                }]
+            }
+        }]
+    };
+    require(
+        [
+            'echarts',
+            'echarts/chart/bar'
+        ],
+        function(ec) {
+            var basic = ec.init(document.getElementById('basic'));
+			if({{Staticq}}==1){//根据统计分析是否选中，来判断是否绘图
+            basic.setOption(bgrOption);
+			}
+
+        });
+		$('#rate select').change(function() {
+        //var selectvalue = $(this).find('option:selected').text();
+		var selectvalue = $(this).val();//该值是字符型
+		alert(selectvalue);
+		switch(selectvalue){
+		case '0':
+				bgrOption.title.text = '车牌颜色统计';
+				bgrOption.series.name='车牌颜色统计';
+		        bgrOption.xAxis[0].data = ['蓝','黑','白','黄'];
+				bgrOption.series[0].data = [{{Ststicdic['plate_blue']}},
+											{{Ststicdic['plate_black']}},
+											{{Ststicdic['plate_white']}},
+											{{Ststicdic['plate_yellow']}}];
+				break;
+		case '1':
+				bgrOption.title.text = '数据有效性统计';
+				bgrOption.series.name='数据有效性统计';
+		        bgrOption.xAxis[0].data = ['有效率','无效率','合格率','超标率'];
+				//Math.round(num*100)/100
+				bgrOption.series[0].data = [Math.round({{Ststicdic['data_youxiao']}}/recordnum*100)/100,
+											Math.round({{Ststicdic['data_wuxiao']}}/recordnum*100)/100,
+											Math.round({{Ststicdic['data_hege']}}/recordnum*100)/100,
+											Math.round({{Ststicdic['data_chaobiao']}}/recordnum*100)/100];
+				break;
+		case '2':
+				bgrOption.title.text = '燃料类型统计';
+				bgrOption.series.name='燃料类型统计';
+		        bgrOption.xAxis[0].data = ['汽油','柴油','天然气'];
+				bgrOption.series[0].data = [{{Ststicdic['fuel_qiyou']}},
+											{{Ststicdic['fuel_chaiyou']}},
+											{{Ststicdic['fuel_tianranqi']}}];
+				break;
+		case '3':
+				bgrOption.title.text = '车流量统计';
+				bgrOption.series[0].name='车流量统计';
+		        bgrOption.xAxis[0].data = ['蓝','黑','白','黄'];
+				bgrOption.series[0].data = [{{Ststicdic['plate_blue']}},
+											{{Ststicdic['plate_black']}},
+											{{Ststicdic['plate_white']}},
+											{{Ststicdic['plate_yellow']}}];
+				break;
+		}
+
+        require(
+            [
+                'echarts',
+                'echarts/chart/bar'
+            ],
+            function(ec) {
+                var basic = ec.init(document.getElementById('basic'));
+                basic.setOption(bgrOption);
+            });
+    });
+
+})
+</script>
+{% endblock %}
